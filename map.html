@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Election District Map</title>
+
+    <!-- Leaflet CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+    <style>
+        #map { height: 100vh; width: 100%; }
+        .back-button { 
+            position: absolute; 
+            top: 10px; left: 10px; 
+            background: white; 
+            padding: 5px 10px; 
+            border-radius: 5px; 
+            text-decoration: none; 
+            font-weight: bold; 
+            z-index: 1000; 
+        }
+    </style>
+</head>
+<body>
+
+    <a href="index.html" class="back-button">⬅ Back to Index</a>
+    <div id="map"></div>
+
+    <script>
+        // Function to get query string parameter
+        function getQueryParam(param) {
+            let urlParams = new URLSearchParams(window.location.search);
+            return urlParams.get(param);
+        }
+
+        // Get GeoJSON filename from URL
+        let geojsonFile = getQueryParam("geojson");
+
+        if (!geojsonFile) {
+            alert("Error: No GeoJSON file provided!");
+            throw new Error("GeoJSON file parameter is missing");
+        }
+
+        // Map initialization
+        var map = L.map('map').setView([40.7, -73.3], 10); // Long Island
+
+        // Add OpenStreetMap Basemap
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(map);
+
+        // Load GeoJSON dynamically based on URL parameter
+        fetch(`https://raw.githubusercontent.com/brewpoo/dfli-election-district-maps/main/${geojsonFile}`)
+            .then(response => response.json())
+            .then(data => {
+                L.geoJSON(data, {
+                    style: function(feature) {
+                        return {
+                            color: feature.properties.color || "#808080",
+                            weight: 2,
+                            fillOpacity: 0.6
+                        };
+                    },
+                    onEachFeature: function(feature, layer) {
+                        let props = feature.properties;
+
+                        // Build the popup content dynamically
+                        let popupContent = `
+                            <b>Election District:</b> ${props.election_district || "Unknown"}<br>
+                            <b>Democratic Voters:</b> ${props.left_voters || "N/A"}<br>
+                            <b>Republican Voters:</b> ${props.right_voters || "N/A"}<br>
+                            <b>Other/Independent Voters:</b> ${props.blank_voters || "N/A"}<br>
+                            <hr>
+                            <b>Democratic Turnout:</b> ${props.left_voted || "N/A"} (${props.left_turnout || "N/A"}%)<br>
+                            <b>Republican Turnout:</b> ${props.right_voted || "N/A"} (${props.right_turnout || "N/A"}%)<br>
+                            <b>Independent Turnout:</b> ${props.blank_voted || "N/A"} (${props.blank_turnout || "N/A"}%)<br>
+                            <hr>
+                            <b>Swing Margin:</b> ${props.swing_margin || "N/A"}%
+                        `;
+
+                        layer.bindPopup(popupContent);
+                    }
+                }).addTo(map);
+            })
+            .catch(error => console.error("Error loading GeoJSON:", error));
+    </script>
+
+</body>
+</html>
