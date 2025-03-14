@@ -68,21 +68,24 @@
 
                         // Build the popup content dynamically
                         let popupContent = `
-                            <b>Election District:</b> ${props.election_district || "Unknown"}<br>
-                        <b>Total Voters:</b> ${props.total_voters ?? "N/A"}<br>
+                        <b>Election District:</b> ${props.election_district || "Unknown"}<br>
+                        <b>Total Registered Voters:</b> ${props.total_voters ?? "N/A"}<br>
                         <b>Democratic:</b> ${props.left_voters ?? 0} 
                             (${props.total_voters ? ((props.left_voters / props.total_voters) * 100).toFixed(1) + "%" : "N/A"})<br>
                         <b>Republican:</b> ${props.right_voters ?? 0} 
                             (${props.total_voters ? ((props.right_voters / props.total_voters) * 100).toFixed(1) + "%" : "N/A"})<br>
                         <b>Independent/Other:</b> ${props.blank_voters ?? 0} 
                             (${props.total_voters ? ((props.blank_voters / props.total_voters) * 100).toFixed(1) + "%" : "N/A"})<br>
-                            <hr>
-                            <b> 2024 General Election</b><br>
-                            <b>Democratic Turnout:</b> ${props.left_voted || "N/A"} (${props.left_turnout || "N/A"}%)<br>
-                            <b>Republican Turnout:</b> ${props.right_voted || "N/A"} (${props.right_turnout || "N/A"}%)<br>
-                            <b>Independent/Other Turnout:</b> ${props.blank_voted || "N/A"} (${props.blank_turnout || "N/A"}%)<br>
-                            <hr>
-                            <b>Swing Margin:</b> ${props.swing_margin || "N/A"}%
+                        <hr>
+                        <b>Swing Margin:</b> ${props.swing_margin || "N/A"}%
+                        <hr>
+                        <b> 2024 General Election Turnout</b><br>
+                        <b>Democratic:</b> ${props.left_voted || "N/A"} (${props.left_turnout || "N/A"}%)<br>
+                        <b>Republican:</b> ${props.right_voted || "N/A"} (${props.right_turnout || "N/A"}%)<br>
+                        <b>Independent/Other:</b> ${props.blank_voted || "N/A"} (${props.blank_turnout || "N/A"}%)<br>
+                        <hr>
+                        <b> 2024 General Election Results</b><br>
+                        <b>Pending:</b>
                         `;
 
                         layer.bindPopup(popupContent);
