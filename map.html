@@ -69,9 +69,13 @@
                         // Build the popup content dynamically
                         let popupContent = `
                             <b>Election District:</b> ${props.election_district || "Unknown"}<br>
-                            <b>Democratic Voters:</b> ${props.left_voters || "N/A"}<br>
-                            <b>Republican Voters:</b> ${props.right_voters || "N/A"}<br>
-                            <b>Independent/Other Voters:</b> ${props.blank_voters || "N/A"}<br>
+                        <b>Total Voters:</b> ${props.total_voters ?? "N/A"}<br>
+                        <b>Democratic:</b> ${props.left_voters ?? 0} 
+                            (${props.total_voters ? ((props.left_voters / props.total_voters) * 100).toFixed(1) + "%" : "N/A"})<br>
+                        <b>Republican:</b> ${props.right_voters ?? 0} 
+                            (${props.total_voters ? ((props.right_voters / props.total_voters) * 100).toFixed(1) + "%" : "N/A"})<br>
+                        <b>Independent:</b> ${props.independent_voters ?? 0} 
+                            (${props.total_voters ? ((props.independent_voters / props.total_voters) * 100).toFixed(1) + "%" : "N/A"})<br>
                             <hr>
                             <b>Democratic Turnout:</b> ${props.left_voted || "N/A"} (${props.left_turnout || "N/A"}%)<br>
                             <b>Republican Turnout:</b> ${props.right_voted || "N/A"} (${props.right_turnout || "N/A"}%)<br>
