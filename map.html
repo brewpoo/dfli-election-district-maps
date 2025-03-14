@@ -74,8 +74,8 @@
                             (${props.total_voters ? ((props.left_voters / props.total_voters) * 100).toFixed(1) + "%" : "N/A"})<br>
                         <b>Republican:</b> ${props.right_voters ?? 0} 
                             (${props.total_voters ? ((props.right_voters / props.total_voters) * 100).toFixed(1) + "%" : "N/A"})<br>
-                        <b>Independent:</b> ${props.independent_voters ?? 0} 
-                            (${props.total_voters ? ((props.independent_voters / props.total_voters) * 100).toFixed(1) + "%" : "N/A"})<br>
+                        <b>Independent:</b> ${props.blank_voters ?? 0} 
+                            (${props.total_voters ? ((props.blank_voters / props.total_voters) * 100).toFixed(1) + "%" : "N/A"})<br>
                             <hr>
                             <b>Democratic Turnout:</b> ${props.left_voted || "N/A"} (${props.left_turnout || "N/A"}%)<br>
                             <b>Republican Turnout:</b> ${props.right_voted || "N/A"} (${props.right_turnout || "N/A"}%)<br>
