@@ -99,19 +99,19 @@
                             (${props.total_voters ? ((props.blank_voters / props.total_voters) * 100).toFixed(1) + "%" : "N/A"})<br>
                         <b> Age Breakdown</b><br>
                         <canvas id="ageChart" width="400" height="200"></canvas>
-                        `;
-                        layer.bindPopup(popupContent);
-
-                        layer.on('popupopen', function() {
-                            renderAgeChart(ageBins);
-                        });
-                        <b>Swing Margin:</b> ${props.swing_margin || "N/A"}%
+                        <b>Swing Margin:</b> ${props.swing_margin || "N/A"}%<br>
                         <hr>
                         <b> 2024 General Election Turnout</b><br>
                         <b>Democratic:</b> ${props.left_voted || "N/A"} (${props.left_turnout || "N/A"}%)<br>
                         <b>Republican:</b> ${props.right_voted || "N/A"} (${props.right_turnout || "N/A"}%)<br>
                         <b>Independent/Other:</b> ${props.blank_voted || "N/A"} (${props.blank_turnout || "N/A"}%)<br>
                         <hr>
+                        `;
+                        layer.bindPopup(popupContent);
+
+                        layer.on('popupopen', function() {
+                            renderAgeChart(ageBins);
+                        });
                     }
                 }).addTo(map);
             })
