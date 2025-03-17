@@ -66,7 +66,21 @@
                     },
                     onEachFeature: function(feature, layer) {
                         let props = feature.properties;
+                        
+                        // Unpack age data
+                        let ageBins = JSON.parse(props.registered_age_bins || "{}");
+                        let votedBins = JSON.parse(props.voted_age_bins || "{}");
 
+                        let ageTable = "<b>Age Breakdown:</b><br><table border='1'><tr><th>Age Group</th><th>Registered</th><th>Voted</th></tr>";
+                        for (let age in ageBins["Left-Leaning"]) {
+                            ageTable += `<tr>
+                                <td>${age}</td>
+                                <td>${(ageBins["Left-Leaning"][age] || 0) + (ageBins["Right-Leaning"][age] || 0) + (ageBins["Blank/Other"][age] || 0)}</td>
+                                <td>${(votedBins["Left-Leaning"][age] || 0) + (votedBins["Right-Leaning"][age] || 0) + (votedBins["Blank/Other"][age] || 0)}</td>
+                            </tr>`;
+                        }
+                        ageTable += "</table>";
+                        
                         // Build the popup content dynamically
                         let popupContent = `
                         <b>Election District:</b> ${props.election_district || "Unknown"}<br>
@@ -78,6 +92,7 @@
                         <b>Independent/Other:</b> ${props.blank_voters ?? 0} 
                             (${props.total_voters ? ((props.blank_voters / props.total_voters) * 100).toFixed(1) + "%" : "N/A"})<br>
                         <hr>
+                        ${ageTable}
                         <b>Swing Margin:</b> ${props.swing_margin || "N/A"}%
                         <hr>
                         <b> 2024 General Election Turnout</b><br>
@@ -86,9 +101,7 @@
                         <b>Independent/Other:</b> ${props.blank_voted || "N/A"} (${props.blank_turnout || "N/A"}%)<br>
                         <hr>
                         <b> 2024 General Election Results</b><br>
-                        <b>Pending:</b><br>
-                        <canvas id="ageChart" width="300" height="200"></canvas>
-                        `;
+                        <b>Pending:</b><br>                        
 
                         layer.bindPopup(popupContent);
 
