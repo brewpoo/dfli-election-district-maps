@@ -51,25 +51,15 @@
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        function unpackAgeBins(properties) {
+        function unpackAgeBins(props) {
             try {
-                // Ensure voter_age_bins is a valid object
-                if (typeof properties.voter_age_bins === "string") {
-                    properties.voter_age_bins = JSON.parse(properties.voter_age_bins);
-                } else if (typeof properties.voter_age_bins !== "object" || properties.voter_age_bins === null) {
-                    properties.voter_age_bins = {}; // Default empty object
-                }
-
-                // Ensure voted_age_bins is a valid object
-                if (typeof properties.voted_age_bins === "string") {
-                    properties.voted_age_bins = JSON.parse(properties.voted_age_bins);
-                } else if (typeof properties.voted_age_bins !== "object" || properties.voted_age_bins === null) {
-                    properties.voted_age_bins = {}; // Default empty object
-                }
+                return {
+                    voterAgeBins: props.voter_age_bins ? JSON.parse(props.voter_age_bins) : {},
+                    votedAgeBins: props.voted_age_bins ? JSON.parse(props.voted_age_bins) : {}
+                };
             } catch (error) {
-                console.error(`Failed to parse age bins for ${properties.election_district}:`, error);
-                properties.voter_age_bins = {};
-                properties.voted_age_bins = {};
+                console.error(`Failed to parse age bins for ${props.election_district}:`, error);
+                return { voterAgeBins: {}, votedAgeBins: {} }; // Ensure it always returns an object
             }
         }
 
@@ -86,7 +76,7 @@
                     },
                     onEachFeature: function(feature, layer) {
                         let props = feature.properties;
-                        let { ageBins, votedBins } = unpackAgeBins(props);
+                        let { voterAgeBins, votedAgeBins } = unpackAgeBins(props);
                         
                         let popupContent = `
                         <b>Election District:</b> ${props.election_district || "Unknown"}<br>
