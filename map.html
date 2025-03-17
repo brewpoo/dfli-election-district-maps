@@ -54,8 +54,8 @@
         function unpackAgeBins(props) {
             try {
                 return {
-                    voterAgeBins: props.voter_age_bins ? JSON.parse(props.voter_age_bins) : {},
-                    votedAgeBins: props.voted_age_bins ? JSON.parse(props.voted_age_bins) : {}
+                    voterAgeBins: typeof props.voter_age_bins === "string" ? JSON.parse(props.voter_age_bins) : props.voter_age_bins || {},
+                    votedAgeBins: typeof props.voted_age_bins === "string" ? JSON.parse(props.voted_age_bins) : props.voted_age_bins || {}
                 };
             } catch (error) {
                 console.error(`Failed to parse age bins for ${props.election_district}:`, error);
