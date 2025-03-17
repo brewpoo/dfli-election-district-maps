@@ -111,11 +111,13 @@
                             <canvas id="votedAgeChart-${districtId}" class="chart-container"></canvas>
                         </div>`;
 
-                        layer.bindPopup(popupContent, { maxWidth: 420 });
-
-                        layer.on('popupopen', function() {
-                            renderAgeCharts(districtId, voterAgeBins, votedAgeBins);
-                            map.panTo(layer.getBounds().getCenter(), { animate: true });
+                        layer.bindPopup(popupContent);
+    
+                        layer.on("popupopen", function() {
+                            setTimeout(() => {
+                                renderAgeChart(`voterAgeChart-${props.election_district.replace(/\s/g, "-")}`, voterAgeBins, "Registered Voters");
+                                renderAgeChart(`votedAgeChart-${props.election_district.replace(/\s/g, "-")}`, votedAgeBins, "Voter Turnout");
+                            }, 300);
                         });
                     }
                 }).addTo(map);
