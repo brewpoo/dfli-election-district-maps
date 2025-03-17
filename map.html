@@ -107,28 +107,53 @@
             })
             .catch(error => console.error("Error loading GeoJSON:", error));
 
-        function renderAgeChart(ageBins,elementName) {
-            let ctx = document.getElementById(elementName).getContext("2d");
-            let ageGroups = ["≤17", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75+"];
-            let leftVoters = ageGroups.map(age => ageBins["Left-Leaning"]?.[age] || 0);
-            let rightVoters = ageGroups.map(age => ageBins["Right-Leaning"]?.[age] || 0);
-            let blankVoters = ageGroups.map(age => ageBins["Blank/Other"]?.[age] || 0);
+            let ageChartInstance = null; // Store chart instance globally
 
-            new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: ageGroups,
-                    datasets: [
-                        { label: "Left-Leaning", data: leftVoters, backgroundColor: "blue" },
-                        { label: "Right-Leaning", data: rightVoters, backgroundColor: "red" },
-                        { label: "Independent/Other", data: blankVoters, backgroundColor: "gray" }
-                    ]
-                },
-                options: {
-                    responsive: true,
-                    scales: { y: { beginAtZero: true } }
+            function renderAgeChart(voterAgeBins, votedAgeBins) {
+                // Get the chart canvas element
+                const chartCanvas = document.getElementById("voterAgeChart").getContext("2d");
+
+                // Destroy previous chart if it exists
+                if (ageChartInstance) {
+                    ageChartInstance.destroy();
                 }
-            });
+
+                // Extract age bin labels and data
+                const labels = Object.keys(voterAgeBins);
+                const totalVoters = labels.map(age => voterAgeBins[age] || 0);
+                const votedVoters = labels.map(age => votedAgeBins[age] || 0);
+
+                // Create new chart instance
+                ageChartInstance = new Chart(chartCanvas, {
+                    type: "bar",
+                    data: {
+                        labels: labels,
+                        datasets: [
+                            {
+                                label: "Registered Voters",
+                                data: totalVoters,
+                                backgroundColor: "rgba(0, 123, 255, 0.5)",
+                                borderColor: "rgba(0, 123, 255, 1)",
+                                borderWidth: 1
+                            },
+                            {
+                                label: "Voted",
+                                data: votedVoters,
+                                backgroundColor: "rgba(40, 167, 69, 0.5)",
+                                borderColor: "rgba(40, 167, 69, 1)",
+                                borderWidth: 1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: { beginAtZero: true }
+                        }
+                    }
+                });
+            }
         }
     </script>
 
