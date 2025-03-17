@@ -124,52 +124,37 @@
 
         let chartInstances = {};
 
-        function renderAgeCharts(districtId, voterAgeBins, votedAgeBins) {
-            const voterCanvas = document.getElementById(`voterAgeChart-${districtId}`);
-            const votedCanvas = document.getElementById(`votedAgeChart-${districtId}`);
+        function renderAgeChart(canvasId, ageData, title) {
+            let ctx = document.getElementById(canvasId).getContext("2d");
 
-            if (!voterCanvas || !votedCanvas) {
-                console.error(`Chart elements not found for district: ${districtId}`);
-                return;
+            // Destroy previous chart instance to prevent canvas re-use error
+            if (window.ageCharts && window.ageCharts[canvasId]) {
+                window.ageCharts[canvasId].destroy();
             }
 
-            if (chartInstances[districtId]) {
-                chartInstances[districtId].forEach(chart => chart.destroy());
-            }
+            let ageLabels = Object.keys(ageData["Left-Leaning"] || {});  // Get age categories
+            let leftData = ageLabels.map(age => ageData["Left-Leaning"]?.[age] || 0);
+            let rightData = ageLabels.map(age => ageData["Right-Leaning"]?.[age] || 0);
+            let blankData = ageLabels.map(age => ageData["Blank/Other"]?.[age] || 0);
 
-            const labels = Object.keys(voterAgeBins);
-            const totalVoters = labels.map(age => voterAgeBins[age] || 0);
-            const votedVoters = labels.map(age => votedAgeBins[age] || 0);
+            window.ageCharts = window.ageCharts || {};  // Store charts globally
 
-            const voterChart = new Chart(voterCanvas.getContext("2d"), {
+            window.ageCharts[canvasId] = new Chart(ctx, {
                 type: "bar",
                 data: {
-                    labels: labels,
-                    datasets: [{
-                        label: "Registered Voters",
-                        data: totalVoters,
-                        backgroundColor: "rgba(0, 123, 255, 0.5)",
-                        borderColor: "rgba(0, 123, 255, 1)",
-                        borderWidth: 1
-                    }]
+                    labels: ageLabels,
+                    datasets: [
+                        { label: "Democratic", data: leftData, backgroundColor: "blue" },
+                        { label: "Republican", data: rightData, backgroundColor: "red" },
+                        { label: "Independent/Other", data: blankData, backgroundColor: "gray" }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true } }
                 }
             });
-
-            const votedChart = new Chart(votedCanvas.getContext("2d"), {
-                type: "bar",
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: "Voted",
-                        data: votedVoters,
-                        backgroundColor: "rgba(40, 167, 69, 0.5)",
-                        borderColor: "rgba(40, 167, 69, 1)",
-                        borderWidth: 1
-                    }]
-                }
-            });
-
-            chartInstances[districtId] = [voterChart, votedChart];
         }
     </script>
 
