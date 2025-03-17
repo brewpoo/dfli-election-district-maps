@@ -24,12 +24,12 @@
         }
         .popup-content {
             width: 400px;
-            max-height: 500px;
-            overflow-y: auto;  /* Enables scrolling for large popups */
+            max-height: 400px;  /* Reduced height */
+            overflow-y: auto;
         }
         .chart-container {
             width: 100%;
-            height: 200px;
+            height: 180px;  /* Reduce chart height */
         }
     </style>
 </head>
@@ -57,12 +57,21 @@
 
         function unpackAgeBins(props) {
             try {
-                return {
-                    voterAgeBins: typeof props.voter_age_bins === "string" ? JSON.parse(props.voter_age_bins) : props.voter_age_bins || {},
-                    votedAgeBins: typeof props.voted_age_bins === "string" ? JSON.parse(props.voted_age_bins) : props.voted_age_bins || {}
-                };
+                let voterAgeBins = typeof props.voter_age_bins === "string" ? JSON.parse(props.voter_age_bins) : props.voter_age_bins || {};
+                let votedAgeBins = typeof props.voted_age_bins === "string" ? JSON.parse(props.voted_age_bins) : props.voted_age_bins || {};
+
+                // Convert string numbers to actual numbers
+                Object.keys(voterAgeBins).forEach(key => {
+                    voterAgeBins[key] = Number(voterAgeBins[key]) || 0;
+                });
+                Object.keys(votedAgeBins).forEach(key => {
+                    votedAgeBins[key] = Number(votedAgeBins[key]) || 0;
+                });
+
+                console.log(`✔ Parsed Age Bins for ${props.election_district}:`, voterAgeBins, votedAgeBins);
+                return { voterAgeBins, votedAgeBins };
             } catch (error) {
-                console.error(`Failed to parse age bins for ${props.election_district}:`, error);
+                console.error(`❌ Failed to parse age bins for ${props.election_district}:`, error);
                 return { voterAgeBins: {}, votedAgeBins: {} };
             }
         }
@@ -113,14 +122,14 @@
 
                         layer.on('popupopen', function() {
                             renderAgeCharts(districtId, voterAgeBins, votedAgeBins);
-                            map.panTo(layer.getBounds().getCenter(), { animate: true }); // Ensure popup is fully visible
+                            map.panTo(layer.getBounds().getCenter(), { animate: true });
                         });
                     }
                 }).addTo(map);
             })
             .catch(error => console.error("Error loading GeoJSON:", error));
 
-        let chartInstances = {}; 
+        let chartInstances = {};
 
         function renderAgeCharts(districtId, voterAgeBins, votedAgeBins) {
             const voterCanvas = document.getElementById(`voterAgeChart-${districtId}`);
@@ -150,11 +159,6 @@
                         borderColor: "rgba(0, 123, 255, 1)",
                         borderWidth: 1
                     }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true } }
                 }
             });
 
@@ -169,11 +173,6 @@
                         borderColor: "rgba(40, 167, 69, 1)",
                         borderWidth: 1
                     }]
-                },
-                options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true } }
                 }
             });
 
