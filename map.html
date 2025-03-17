@@ -117,7 +117,7 @@
                             setTimeout(() => {
                                 renderAgeChart(`voterAgeChart-${props.election_district.replace(/\s/g, "-")}`, voterAgeBins, "Registered Voters");
                                 renderAgeChart(`votedAgeChart-${props.election_district.replace(/\s/g, "-")}`, votedAgeBins, "Voter Turnout");
-                            }, 300);
+                            }, 500);
                         });
                     }
                 }).addTo(map);
@@ -127,9 +127,15 @@
         let chartInstances = {};
 
         function renderAgeChart(canvasId, ageData, title) {
-            let ctx = document.getElementById(canvasId).getContext("2d");
+            let canvas = document.getElementById(canvasId);
+            if (!canvas) {
+                console.warn(`⚠ Skipping chart rendering. Missing canvas: ${canvasId}`);
+                return;
+            }
 
-            // Destroy previous chart instance to prevent canvas re-use error
+            let ctx = canvas.getContext("2d");
+
+            // Destroy previous chart instance if exists (to prevent conflicts)
             if (window.ageCharts && window.ageCharts[canvasId]) {
                 window.ageCharts[canvasId].destroy();
             }
@@ -146,9 +152,9 @@
                 data: {
                     labels: ageLabels,
                     datasets: [
-                        { label: "Democratic", data: leftData, backgroundColor: "blue" },
-                        { label: "Republican", data: rightData, backgroundColor: "red" },
-                        { label: "Independent/Other", data: blankData, backgroundColor: "gray" }
+                        { label: "Left", data: leftData, backgroundColor: "blue" },
+                        { label: "Right", data: rightData, backgroundColor: "red" },
+                        { label: "Independent", data: blankData, backgroundColor: "gray" }
                     ]
                 },
                 options: {
