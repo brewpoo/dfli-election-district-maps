@@ -88,7 +88,7 @@
                         <b>Independent/Other:</b> ${props.blank_voters ?? 0} 
                             (${props.total_voters ? ((props.blank_voters / props.total_voters) * 100).toFixed(1) + "%" : "N/A"})<br>
                         <b> Age Breakdown</b><br>
-                        <canvas id="ageChart" width="400" height="200"></canvas>
+                        <canvas id="voterAgeChart" width="400" height="200"></canvas>
                         <b>Swing Margin:</b> ${props.swing_margin || "N/A"}%<br>
                         <hr>
                         <b> 2024 General Election Turnout</b><br>
@@ -100,15 +100,15 @@
                         layer.bindPopup(popupContent);
 
                         layer.on('popupopen', function() {
-                            renderAgeChart(ageBins);
+                            renderAgeChart(voterAgeBins,voterAgeChart);
                         });
                     }
                 }).addTo(map);
             })
             .catch(error => console.error("Error loading GeoJSON:", error));
 
-        function renderAgeChart(ageBins) {
-            let ctx = document.getElementById("ageChart").getContext("2d");
+        function renderAgeChart(ageBins,elementName) {
+            let ctx = document.getElementById("elementName").getContext("2d");
             let ageGroups = ["≤17", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75+"];
             let leftVoters = ageGroups.map(age => ageBins["Left-Leaning"]?.[age] || 0);
             let rightVoters = ageGroups.map(age => ageBins["Right-Leaning"]?.[age] || 0);
