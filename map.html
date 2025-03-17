@@ -22,37 +22,47 @@
             font-weight: bold; 
             z-index: 1000; 
         }
+        .chart-container {
+            width: 400px;
+            height: 200px;
+        }
     </style>
 </head>
 <body>
 
     <a href="index.html" class="back-button">⬅ Back to Index</a>
     <div id="map"></div>
+    <canvas id="ageChart" width="400" height="200" style="display:none;"></canvas>
 
     <script>
-        // Function to get query string parameter
         function getQueryParam(param) {
             let urlParams = new URLSearchParams(window.location.search);
             return urlParams.get(param);
         }
 
-        // Get GeoJSON filename from URL
         let geojsonFile = getQueryParam("geojson");
-
         if (!geojsonFile) {
             alert("Error: No GeoJSON file provided!");
             throw new Error("GeoJSON file parameter is missing");
         }
 
-        // Map initialization
-        var map = L.map('map').setView([40.7, -73.3], 10); // Long Island
-
-        // Add OpenStreetMap Basemap
+        var map = L.map('map').setView([40.7, -73.3], 10);
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        // Load GeoJSON dynamically based on URL parameter
+        function unpackAgeBins(props) {
+            let ageBins = {};
+            let votedBins = {};
+            try {
+                ageBins = JSON.parse(props.voter_age_bins || "{}") || {};
+                votedBins = JSON.parse(props.voted_age_bins || "{}") || {};
+            } catch (e) {
+                console.error("Failed to parse age bins for", props.election_district, e);
+            }
+            return { ageBins, votedBins };
+        }
+
         fetch(`https://raw.githubusercontent.com/brewpoo/dfli-election-district-maps/main/${geojsonFile}`)
             .then(response => response.json())
             .then(data => {
@@ -66,22 +76,8 @@
                     },
                     onEachFeature: function(feature, layer) {
                         let props = feature.properties;
+                        let { ageBins, votedBins } = unpackAgeBins(props);
                         
-                        // Unpack age data
-                        let ageBins = JSON.parse(props.voter_age_bins || "{}");
-                        let votedBins = JSON.parse(props.voted_age_bins || "{}");
-
-                        let ageTable = "<b>Age Breakdown:</b><br><table border='1'><tr><th>Age Group</th><th>Registered</th><th>Voted</th></tr>";
-                        for (let age in ageBins["Left-Leaning"]) {
-                            ageTable += `<tr>
-                                <td>${age}</td>
-                                <td>${(ageBins["Left-Leaning"][age] || 0) + (ageBins["Right-Leaning"][age] || 0) + (ageBins["Blank/Other"][age] || 0)}</td>
-                                <td>${(votedBins["Left-Leaning"][age] || 0) + (votedBins["Right-Leaning"][age] || 0) + (votedBins["Blank/Other"][age] || 0)}</td>
-                            </tr>`;
-                        }
-                        ageTable += "</table>";
-                        
-                        // Build the popup content dynamically
                         let popupContent = `
                         <b>Election District:</b> ${props.election_district || "Unknown"}<br>
                         <b>Total Registered Voters:</b> ${props.total_voters ?? "N/A"}<br>
@@ -92,7 +88,6 @@
                         <b>Independent/Other:</b> ${props.blank_voters ?? 0} 
                             (${props.total_voters ? ((props.blank_voters / props.total_voters) * 100).toFixed(1) + "%" : "N/A"})<br>
                         <hr>
-                        ${ageTable}
                         <b>Swing Margin:</b> ${props.swing_margin || "N/A"}%
                         <hr>
                         <b> 2024 General Election Turnout</b><br>
@@ -100,47 +95,39 @@
                         <b>Republican:</b> ${props.right_voted || "N/A"} (${props.right_turnout || "N/A"}%)<br>
                         <b>Independent/Other:</b> ${props.blank_voted || "N/A"} (${props.blank_turnout || "N/A"}%)<br>
                         <hr>
-                        <b> 2024 General Election Results</b><br>
-                        <b>Pending:</b><br>                        
-
+                        <b> Age Breakdown</b><br>
+                        <canvas id="ageChart" width="400" height="200"></canvas>
+                        `;
                         layer.bindPopup(popupContent);
 
-                        layer.on("click", function() {
-                            setTimeout(() => {
-                                renderAgeChart(props);
-                            }, 500); // Ensure the canvas is created
+                        layer.on('popupopen', function() {
+                            renderAgeChart(ageBins);
                         });
                     }
                 }).addTo(map);
             })
             .catch(error => console.error("Error loading GeoJSON:", error));
 
-        // Function to render the age distribution stacked bar chart
-        function renderAgeChart(props) {
-            var ctx = document.getElementById("ageChart")?.getContext("2d");
-            if (!ctx) return; // Prevent errors if canvas doesn't exist
-
-            var ageBins = ["≤17", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75+"];
-            var leftVoters = ageBins.map(bin => props["total_voters_Left-Leaning"]?.[bin] || 0);
-            var blankVoters = ageBins.map(bin => props["total_voters_Blank/Other"]?.[bin] || 0);
-            var rightVoters = ageBins.map(bin => props["total_voters_Right-Leaning"]?.[bin] || 0);
+        function renderAgeChart(ageBins) {
+            let ctx = document.getElementById("ageChart").getContext("2d");
+            let ageGroups = ["≤17", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75+"];
+            let leftVoters = ageGroups.map(age => ageBins["Left-Leaning"]?.[age] || 0);
+            let rightVoters = ageGroups.map(age => ageBins["Right-Leaning"]?.[age] || 0);
+            let blankVoters = ageGroups.map(age => ageBins["Blank/Other"]?.[age] || 0);
 
             new Chart(ctx, {
-                type: "bar",
+                type: 'bar',
                 data: {
-                    labels: ageBins,
+                    labels: ageGroups,
                     datasets: [
-                        { label: "Left-Leaning", backgroundColor: "blue", data: leftVoters },
-                        { label: "Independent/Other", backgroundColor: "gray", data: blankVoters },
-                        { label: "Right-Leaning", backgroundColor: "red", data: rightVoters }
+                        { label: "Left-Leaning", data: leftVoters, backgroundColor: "blue" },
+                        { label: "Right-Leaning", data: rightVoters, backgroundColor: "red" },
+                        { label: "Independent/Other", data: blankVoters, backgroundColor: "gray" }
                     ]
                 },
                 options: {
-                    responsive: false,
-                    scales: {
-                        x: { stacked: true },
-                        y: { stacked: true }
-                    }
+                    responsive: true,
+                    scales: { y: { beginAtZero: true } }
                 }
             });
         }
