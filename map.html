@@ -22,8 +22,13 @@
             font-weight: bold; 
             z-index: 1000; 
         }
-        .chart-container {
+        .popup-content {
             width: 400px;
+            max-height: 500px;
+            overflow-y: auto;  /* Enables scrolling for large popups */
+        }
+        .chart-container {
+            width: 100%;
             height: 200px;
         }
     </style>
@@ -76,61 +81,65 @@
                     onEachFeature: function(feature, layer) {
                         let props = feature.properties;
                         let { voterAgeBins, votedAgeBins } = unpackAgeBins(props);
-                        let districtId = props.election_district.replace(/\s+/g, "_");  // Unique ID
+                        let districtId = props.election_district.replace(/\s+/g, "_");
 
                         let popupContent = `
-                        <b>Election District:</b> ${props.election_district || "Unknown"}<br>
-                        <b>Total Registered Voters:</b> ${props.total_voters ?? "N/A"}<br>
-                        <b>Democratic:</b> ${props.left_voters ?? 0} 
-                            (${props.total_voters ? ((props.left_voters / props.total_voters) * 100).toFixed(1) + "%" : "N/A"})<br>
-                        <b>Republican:</b> ${props.right_voters ?? 0} 
-                            (${props.total_voters ? ((props.right_voters / props.total_voters) * 100).toFixed(1) + "%" : "N/A"})<br>
-                        <b>Independent/Other:</b> ${props.blank_voters ?? 0} 
-                            (${props.total_voters ? ((props.blank_voters / props.total_voters) * 100).toFixed(1) + "%" : "N/A"})<br>
+                        <div class="popup-content">
+                            <b>Election District:</b> ${props.election_district || "Unknown"}<br>
+                            <b>Total Registered Voters:</b> ${props.total_voters ?? "N/A"}<br>
+                            <b>Democratic:</b> ${props.left_voters ?? 0} 
+                                (${props.total_voters ? ((props.left_voters / props.total_voters) * 100).toFixed(1) + "%" : "N/A"})<br>
+                            <b>Republican:</b> ${props.right_voters ?? 0} 
+                                (${props.total_voters ? ((props.right_voters / props.total_voters) * 100).toFixed(1) + "%" : "N/A"})<br>
+                            <b>Independent/Other:</b> ${props.blank_voters ?? 0} 
+                                (${props.total_voters ? ((props.blank_voters / props.total_voters) * 100).toFixed(1) + "%" : "N/A"})<br>
 
-                        <hr>
-                        <b> Age Breakdown (Registered Voters):</b><br>
-                        <canvas id="voterAgeChart-${districtId}" width="400" height="200"></canvas>
+                            <hr>
+                            <b> Age Breakdown (Registered Voters):</b><br>
+                            <canvas id="voterAgeChart-${districtId}" class="chart-container"></canvas>
 
-                        <hr>
-                        <b> 2024 General Election Turnout</b><br>
-                        <b>Democratic:</b> ${props.left_voted || "N/A"} (${props.left_turnout || "N/A"}%)<br>
-                        <b>Republican:</b> ${props.right_voted || "N/A"} (${props.right_turnout || "N/A"}%)<br>
-                        <b>Independent/Other:</b> ${props.blank_voted || "N/A"} (${props.blank_turnout || "N/A"}%)<br>
+                            <hr>
+                            <b> 2024 General Election Turnout</b><br>
+                            <b>Democratic:</b> ${props.left_voted || "N/A"} (${props.left_turnout || "N/A"}%)<br>
+                            <b>Republican:</b> ${props.right_voted || "N/A"} (${props.right_turnout || "N/A"}%)<br>
+                            <b>Independent/Other:</b> ${props.blank_voted || "N/A"} (${props.blank_turnout || "N/A"}%)<br>
 
-                        <hr>
-                        <b> Age Breakdown (Turnout):</b><br>
-                        <canvas id="votedAgeChart-${districtId}" width="400" height="200"></canvas>
-                        `;
+                            <hr>
+                            <b> Age Breakdown (Turnout):</b><br>
+                            <canvas id="votedAgeChart-${districtId}" class="chart-container"></canvas>
+                        </div>`;
 
-                        layer.bindPopup(popupContent);
+                        layer.bindPopup(popupContent, { maxWidth: 420 });
 
                         layer.on('popupopen', function() {
                             renderAgeCharts(districtId, voterAgeBins, votedAgeBins);
+                            map.panTo(layer.getBounds().getCenter(), { animate: true }); // Ensure popup is fully visible
                         });
                     }
                 }).addTo(map);
             })
             .catch(error => console.error("Error loading GeoJSON:", error));
 
-        let chartInstances = {}; // Store chart instances per ED
+        let chartInstances = {}; 
 
         function renderAgeCharts(districtId, voterAgeBins, votedAgeBins) {
-            const voterCanvas = document.getElementById(`voterAgeChart-${districtId}`).getContext("2d");
-            const votedCanvas = document.getElementById(`votedAgeChart-${districtId}`).getContext("2d");
+            const voterCanvas = document.getElementById(`voterAgeChart-${districtId}`);
+            const votedCanvas = document.getElementById(`votedAgeChart-${districtId}`);
 
-            // Destroy previous charts if they exist
+            if (!voterCanvas || !votedCanvas) {
+                console.error(`Chart elements not found for district: ${districtId}`);
+                return;
+            }
+
             if (chartInstances[districtId]) {
                 chartInstances[districtId].forEach(chart => chart.destroy());
             }
 
-            // Extract labels and data
             const labels = Object.keys(voterAgeBins);
             const totalVoters = labels.map(age => voterAgeBins[age] || 0);
             const votedVoters = labels.map(age => votedAgeBins[age] || 0);
 
-            // Create new chart instances
-            const voterChart = new Chart(voterCanvas, {
+            const voterChart = new Chart(voterCanvas.getContext("2d"), {
                 type: "bar",
                 data: {
                     labels: labels,
@@ -149,7 +158,7 @@
                 }
             });
 
-            const votedChart = new Chart(votedCanvas, {
+            const votedChart = new Chart(votedCanvas.getContext("2d"), {
                 type: "bar",
                 data: {
                     labels: labels,
@@ -168,7 +177,7 @@
                 }
             });
 
-            chartInstances[districtId] = [voterChart, votedChart]; // Store for cleanup
+            chartInstances[districtId] = [voterChart, votedChart];
         }
     </script>
 
