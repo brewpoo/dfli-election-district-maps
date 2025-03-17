@@ -51,16 +51,26 @@
             attribution: '&copy; OpenStreetMap contributors'
         }).addTo(map);
 
-        function unpackAgeBins(props) {
-            let ageBins = {};
-            let votedBins = {};
+        function unpackAgeBins(properties) {
             try {
-                ageBins = JSON.parse(props.voter_age_bins || "{}") || {};
-                votedBins = JSON.parse(props.voted_age_bins || "{}") || {};
-            } catch (e) {
-                console.error("Failed to parse age bins for", props.election_district, e);
+                // Ensure voter_age_bins is a valid object
+                if (typeof properties.voter_age_bins === "string") {
+                    properties.voter_age_bins = JSON.parse(properties.voter_age_bins);
+                } else if (typeof properties.voter_age_bins !== "object" || properties.voter_age_bins === null) {
+                    properties.voter_age_bins = {}; // Default empty object
+                }
+
+                // Ensure voted_age_bins is a valid object
+                if (typeof properties.voted_age_bins === "string") {
+                    properties.voted_age_bins = JSON.parse(properties.voted_age_bins);
+                } else if (typeof properties.voted_age_bins !== "object" || properties.voted_age_bins === null) {
+                    properties.voted_age_bins = {}; // Default empty object
+                }
+            } catch (error) {
+                console.error(`Failed to parse age bins for ${properties.election_district}:`, error);
+                properties.voter_age_bins = {};
+                properties.voted_age_bins = {};
             }
-            return { ageBins, votedBins };
         }
 
         fetch(`https://raw.githubusercontent.com/brewpoo/dfli-election-district-maps/main/${geojsonFile}`)
@@ -87,14 +97,6 @@
                             (${props.total_voters ? ((props.right_voters / props.total_voters) * 100).toFixed(1) + "%" : "N/A"})<br>
                         <b>Independent/Other:</b> ${props.blank_voters ?? 0} 
                             (${props.total_voters ? ((props.blank_voters / props.total_voters) * 100).toFixed(1) + "%" : "N/A"})<br>
-                        <hr>
-                        <b>Swing Margin:</b> ${props.swing_margin || "N/A"}%
-                        <hr>
-                        <b> 2024 General Election Turnout</b><br>
-                        <b>Democratic:</b> ${props.left_voted || "N/A"} (${props.left_turnout || "N/A"}%)<br>
-                        <b>Republican:</b> ${props.right_voted || "N/A"} (${props.right_turnout || "N/A"}%)<br>
-                        <b>Independent/Other:</b> ${props.blank_voted || "N/A"} (${props.blank_turnout || "N/A"}%)<br>
-                        <hr>
                         <b> Age Breakdown</b><br>
                         <canvas id="ageChart" width="400" height="200"></canvas>
                         `;
@@ -103,6 +105,13 @@
                         layer.on('popupopen', function() {
                             renderAgeChart(ageBins);
                         });
+                        <b>Swing Margin:</b> ${props.swing_margin || "N/A"}%
+                        <hr>
+                        <b> 2024 General Election Turnout</b><br>
+                        <b>Democratic:</b> ${props.left_voted || "N/A"} (${props.left_turnout || "N/A"}%)<br>
+                        <b>Republican:</b> ${props.right_voted || "N/A"} (${props.right_turnout || "N/A"}%)<br>
+                        <b>Independent/Other:</b> ${props.blank_voted || "N/A"} (${props.blank_turnout || "N/A"}%)<br>
+                        <hr>
                     }
                 }).addTo(map);
             })
