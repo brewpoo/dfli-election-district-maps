@@ -8,6 +8,7 @@
     <!-- Leaflet CSS & JS -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <style>
         #map { height: 100vh; width: 100%; }
@@ -85,14 +86,51 @@
                         <b>Independent/Other:</b> ${props.blank_voted || "N/A"} (${props.blank_turnout || "N/A"}%)<br>
                         <hr>
                         <b> 2024 General Election Results</b><br>
-                        <b>Pending:</b>
+                        <b>Pending:</b><br>
+                        <canvas id="ageChart" width="300" height="200"></canvas>
                         `;
 
                         layer.bindPopup(popupContent);
+
+                        layer.on("click", function() {
+                            setTimeout(() => {
+                                renderAgeChart(props);
+                            }, 500); // Ensure the canvas is created
+                        });
                     }
                 }).addTo(map);
             })
             .catch(error => console.error("Error loading GeoJSON:", error));
+
+        // Function to render the age distribution stacked bar chart
+        function renderAgeChart(props) {
+            var ctx = document.getElementById("ageChart")?.getContext("2d");
+            if (!ctx) return; // Prevent errors if canvas doesn't exist
+
+            var ageBins = ["≤17", "18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75+"];
+            var leftVoters = ageBins.map(bin => props["total_voters_Left-Leaning"]?.[bin] || 0);
+            var blankVoters = ageBins.map(bin => props["total_voters_Blank/Other"]?.[bin] || 0);
+            var rightVoters = ageBins.map(bin => props["total_voters_Right-Leaning"]?.[bin] || 0);
+
+            new Chart(ctx, {
+                type: "bar",
+                data: {
+                    labels: ageBins,
+                    datasets: [
+                        { label: "Left-Leaning", backgroundColor: "blue", data: leftVoters },
+                        { label: "Independent/Other", backgroundColor: "gray", data: blankVoters },
+                        { label: "Right-Leaning", backgroundColor: "red", data: rightVoters }
+                    ]
+                },
+                options: {
+                    responsive: false,
+                    scales: {
+                        x: { stacked: true },
+                        y: { stacked: true }
+                    }
+                }
+            });
+        }
     </script>
 
 </body>
