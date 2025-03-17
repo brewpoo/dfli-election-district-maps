@@ -68,7 +68,7 @@
                         let props = feature.properties;
                         
                         // Unpack age data
-                        let ageBins = JSON.parse(props.registered_age_bins || "{}");
+                        let ageBins = JSON.parse(props.voter_age_bins || "{}");
                         let votedBins = JSON.parse(props.voted_age_bins || "{}");
 
                         let ageTable = "<b>Age Breakdown:</b><br><table border='1'><tr><th>Age Group</th><th>Registered</th><th>Voted</th></tr>";
