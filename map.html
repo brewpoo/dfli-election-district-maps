@@ -32,7 +32,6 @@
 
     <a href="index.html" class="back-button">⬅ Back to Index</a>
     <div id="map"></div>
-    <canvas id="ageChart" width="400" height="200" style="display:none;"></canvas>
 
     <script>
         function getQueryParam(param) {
@@ -59,7 +58,7 @@
                 };
             } catch (error) {
                 console.error(`Failed to parse age bins for ${props.election_district}:`, error);
-                return { voterAgeBins: {}, votedAgeBins: {} }; // Ensure it always returns an object
+                return { voterAgeBins: {}, votedAgeBins: {} };
             }
         }
 
@@ -77,7 +76,8 @@
                     onEachFeature: function(feature, layer) {
                         let props = feature.properties;
                         let { voterAgeBins, votedAgeBins } = unpackAgeBins(props);
-                        
+                        let districtId = props.election_district.replace(/\s+/g, "_");  // Unique ID
+
                         let popupContent = `
                         <b>Election District:</b> ${props.election_district || "Unknown"}<br>
                         <b>Total Registered Voters:</b> ${props.total_voters ?? "N/A"}<br>
@@ -87,74 +87,89 @@
                             (${props.total_voters ? ((props.right_voters / props.total_voters) * 100).toFixed(1) + "%" : "N/A"})<br>
                         <b>Independent/Other:</b> ${props.blank_voters ?? 0} 
                             (${props.total_voters ? ((props.blank_voters / props.total_voters) * 100).toFixed(1) + "%" : "N/A"})<br>
-                        <b> Age Breakdown</b><br>
-                        <canvas id="voterAgeChart" width="400" height="200"></canvas>
-                        <b>Swing Margin:</b> ${props.swing_margin || "N/A"}%<br>
+
+                        <hr>
+                        <b> Age Breakdown (Registered Voters):</b><br>
+                        <canvas id="voterAgeChart-${districtId}" width="400" height="200"></canvas>
+
                         <hr>
                         <b> 2024 General Election Turnout</b><br>
                         <b>Democratic:</b> ${props.left_voted || "N/A"} (${props.left_turnout || "N/A"}%)<br>
                         <b>Republican:</b> ${props.right_voted || "N/A"} (${props.right_turnout || "N/A"}%)<br>
                         <b>Independent/Other:</b> ${props.blank_voted || "N/A"} (${props.blank_turnout || "N/A"}%)<br>
+
                         <hr>
+                        <b> Age Breakdown (Turnout):</b><br>
+                        <canvas id="votedAgeChart-${districtId}" width="400" height="200"></canvas>
                         `;
+
                         layer.bindPopup(popupContent);
 
                         layer.on('popupopen', function() {
-                            renderAgeChart(voterAgeBins,"voterAgeChart");
+                            renderAgeCharts(districtId, voterAgeBins, votedAgeBins);
                         });
                     }
                 }).addTo(map);
             })
             .catch(error => console.error("Error loading GeoJSON:", error));
 
-            let ageChartInstance = null; // Store chart instance globally
+        let chartInstances = {}; // Store chart instances per ED
 
-            function renderAgeChart(voterAgeBins, votedAgeBins) {
-                // Get the chart canvas element
-                const chartCanvas = document.getElementById("voterAgeChart").getContext("2d");
+        function renderAgeCharts(districtId, voterAgeBins, votedAgeBins) {
+            const voterCanvas = document.getElementById(`voterAgeChart-${districtId}`).getContext("2d");
+            const votedCanvas = document.getElementById(`votedAgeChart-${districtId}`).getContext("2d");
 
-                // Destroy previous chart if it exists
-                if (ageChartInstance) {
-                    ageChartInstance.destroy();
-                }
-
-                // Extract age bin labels and data
-                const labels = Object.keys(voterAgeBins);
-                const totalVoters = labels.map(age => voterAgeBins[age] || 0);
-                const votedVoters = labels.map(age => votedAgeBins[age] || 0);
-
-                // Create new chart instance
-                ageChartInstance = new Chart(chartCanvas, {
-                    type: "bar",
-                    data: {
-                        labels: labels,
-                        datasets: [
-                            {
-                                label: "Registered Voters",
-                                data: totalVoters,
-                                backgroundColor: "rgba(0, 123, 255, 0.5)",
-                                borderColor: "rgba(0, 123, 255, 1)",
-                                borderWidth: 1
-                            },
-                            {
-                                label: "Voted",
-                                data: votedVoters,
-                                backgroundColor: "rgba(40, 167, 69, 0.5)",
-                                borderColor: "rgba(40, 167, 69, 1)",
-                                borderWidth: 1
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        scales: {
-                            y: { beginAtZero: true }
-                        }
-                    }
-                });
+            // Destroy previous charts if they exist
+            if (chartInstances[districtId]) {
+                chartInstances[districtId].forEach(chart => chart.destroy());
             }
-      
+
+            // Extract labels and data
+            const labels = Object.keys(voterAgeBins);
+            const totalVoters = labels.map(age => voterAgeBins[age] || 0);
+            const votedVoters = labels.map(age => votedAgeBins[age] || 0);
+
+            // Create new chart instances
+            const voterChart = new Chart(voterCanvas, {
+                type: "bar",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: "Registered Voters",
+                        data: totalVoters,
+                        backgroundColor: "rgba(0, 123, 255, 0.5)",
+                        borderColor: "rgba(0, 123, 255, 1)",
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            const votedChart = new Chart(votedCanvas, {
+                type: "bar",
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: "Voted",
+                        data: votedVoters,
+                        backgroundColor: "rgba(40, 167, 69, 0.5)",
+                        borderColor: "rgba(40, 167, 69, 1)",
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+
+            chartInstances[districtId] = [voterChart, votedChart]; // Store for cleanup
+        }
     </script>
 
 </body>
