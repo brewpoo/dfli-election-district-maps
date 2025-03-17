@@ -57,21 +57,14 @@
 
         function unpackAgeBins(props) {
             try {
-                let voterAgeBins = typeof props.voter_age_bins === "string" ? JSON.parse(props.voter_age_bins) : props.voter_age_bins || {};
-                let votedAgeBins = typeof props.voted_age_bins === "string" ? JSON.parse(props.voted_age_bins) : props.voted_age_bins || {};
-
-                // Convert string numbers to actual numbers
-                Object.keys(voterAgeBins).forEach(key => {
-                    voterAgeBins[key] = Number(voterAgeBins[key]) || 0;
-                });
-                Object.keys(votedAgeBins).forEach(key => {
-                    votedAgeBins[key] = Number(votedAgeBins[key]) || 0;
-                });
+                let voterAgeBins = props.voter_age_bins || {};  // Directly use, it's already an object
+                let votedAgeBins = props.voted_age_bins || {};
 
                 console.log(`✔ Parsed Age Bins for ${props.election_district}:`, voterAgeBins, votedAgeBins);
+
                 return { voterAgeBins, votedAgeBins };
             } catch (error) {
-                console.error(`❌ Failed to parse age bins for ${props.election_district}:`, error);
+                console.error(`❌ Failed to parse age bins for ${props.election_district}:`, error, props);
                 return { voterAgeBins: {}, votedAgeBins: {} };
             }
         }
