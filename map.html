@@ -111,7 +111,8 @@
                                 (${props.total_voters ? ((props.right_voters / props.total_voters) * 100).toFixed(1) + "%" : "N/A"})<br>
                             <b>Independent/Other:</b> ${props.blank_voters ?? 0} 
                                 (${props.total_voters ? ((props.blank_voters / props.total_voters) * 100).toFixed(1) + "%" : "N/A"})<br>
-
+                            <br>
+                            <b>Swing Margin:</b> ${props.swing_margin || "N/A"}%<br>
                             <hr>
                             <b> Age Breakdown (Registered Voters):</b><br>
                             <canvas id="voterAgeChart-${districtId}" class="chart-container"></canvas>
