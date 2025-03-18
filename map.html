@@ -158,18 +158,19 @@
             }
 
             let ageLabels = Object.keys(ageData["Left-Leaning"] || {}).reverse();
-            let leftData = ageLabels.map(age => -(ageData["Left-Leaning"]?.[age] || 0));
-            let rightData = ageLabels.map(age => ageData["Right-Leaning"]?.[age] || 0);
-            let blankData = ageLabels.map(age => ageData["Blank/Other"]?.[age] || 0);
 
-            // Force the chart to fit inside the popup
+            let leftData = ageLabels.map(age => -(ageData["Left-Leaning"]?.[age] || 0) - (ageData["Blank/Other"]?.[age] || 0) / 2);
+            let rightData = ageLabels.map(age => (ageData["Right-Leaning"]?.[age] || 0) + (ageData["Blank/Other"]?.[age] || 0) / 2);
+
+            let totalWidth = 350;  // Prevent overflow issues
+
             let container = document.getElementById(canvasId).parentElement;
-            container.style.maxWidth = "350px";  // Ensure it never overflows
-            container.style.margin = "0 auto"; // Center it
-            container.style.padding = "5px"; // Add spacing
+            container.style.maxWidth = `${totalWidth}px`;
+            container.style.margin = "0 auto";
+            container.style.padding = "5px";
 
             canvas.style.width = "100%";
-            canvas.style.maxWidth = "350px";
+            canvas.style.maxWidth = `${totalWidth}px`;
             canvas.style.height = `${Math.max(250, ageLabels.length * 30)}px`;
 
             window.ageCharts = window.ageCharts || {};
@@ -180,7 +181,6 @@
                     labels: ageLabels,
                     datasets: [
                         { label: "Left-Leaning", data: leftData, backgroundColor: "blue", stack: "total" },
-                        { label: "Independent", data: blankData, backgroundColor: "gray", stack: "total" },
                         { label: "Right-Leaning", data: rightData, backgroundColor: "red", stack: "total" }
                     ]
                 },
