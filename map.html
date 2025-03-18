@@ -23,13 +23,25 @@
             z-index: 1000; 
         }
         .popup-content {
-            width: 400px;
+            width: 550px;
             max-height: 400px;  /* Reduced height */
             overflow-y: auto;
         }
+        .leaflet-popup-content {
+            max-width: 550px !important; /* Prevents overflowing */
+            padding: 10px !important; /* Adds some spacing */
+            /*text-align: center; /* Centers everything */
+        }
+
         .chart-container {
-            width: 100%;
-            height: 180px;  /* Reduce chart height */
+            max-width: 350px; /* Forces chart to fit */
+            margin: 0 auto; /* Centers inside popup */
+            padding: 5px 10px; /* Prevents touching edges */
+        }
+
+        hr {
+            width: 95%; /* Centers horizontal rules */
+            margin: 10px auto; /* Proper spacing */
         }
     </style>
 </head>
@@ -139,32 +151,55 @@
 
             let ctx = canvas.getContext("2d");
 
-            // Destroy previous chart instance if exists (to prevent conflicts)
+            // Destroy previous chart instance if exists
             if (window.ageCharts && window.ageCharts[canvasId]) {
                 window.ageCharts[canvasId].destroy();
             }
 
-            let ageLabels = Object.keys(ageData["Left-Leaning"] || {});  
-            let leftData = ageLabels.map(age => ageData["Left-Leaning"]?.[age] || 0);
+            let ageLabels = Object.keys(ageData["Left-Leaning"] || {}).reverse();
+            let leftData = ageLabels.map(age => -(ageData["Left-Leaning"]?.[age] || 0));
             let rightData = ageLabels.map(age => ageData["Right-Leaning"]?.[age] || 0);
             let blankData = ageLabels.map(age => ageData["Blank/Other"]?.[age] || 0);
 
-            window.ageCharts = window.ageCharts || {};  // Store charts globally
+            // Force the chart to fit inside the popup
+            let container = document.getElementById(canvasId).parentElement;
+            container.style.maxWidth = "350px";  // Ensure it never overflows
+            container.style.margin = "0 auto"; // Center it
+            container.style.padding = "5px"; // Add spacing
+
+            canvas.style.width = "100%";
+            canvas.style.maxWidth = "350px";
+            canvas.style.height = `${Math.max(250, ageLabels.length * 30)}px`;
+
+            window.ageCharts = window.ageCharts || {};
 
             window.ageCharts[canvasId] = new Chart(ctx, {
                 type: "bar",
                 data: {
                     labels: ageLabels,
                     datasets: [
-                        { label: "Left", data: leftData, backgroundColor: "blue" },
-                        { label: "Right", data: rightData, backgroundColor: "red" },
-                        { label: "Independent", data: blankData, backgroundColor: "gray" }
+                        { label: "Left-Leaning", data: leftData, backgroundColor: "blue", stack: "total" },
+                        { label: "Independent", data: blankData, backgroundColor: "gray", stack: "total" },
+                        { label: "Right-Leaning", data: rightData, backgroundColor: "red", stack: "total" }
                     ]
                 },
                 options: {
+                    indexAxis: "y",
                     responsive: true,
                     maintainAspectRatio: false,
-                    scales: { y: { beginAtZero: true } }
+                    layout: { padding: { left: 10, right: 10, top: 10, bottom: 10 } },
+                    scales: {
+                        x: {
+                            stacked: true,
+                            beginAtZero: true,
+                            ticks: { callback: (value) => Math.abs(value) }
+                        },
+                        y: { stacked: true, title: { display: true, text: "Age Group" } }
+                    },
+                    plugins: {
+                        legend: { position: "bottom" },
+                        title: { display: true, text: title }
+                    }
                 }
             });
         }
