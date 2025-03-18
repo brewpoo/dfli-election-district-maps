@@ -68,6 +68,10 @@
                 return { voterAgeBins: {}, votedAgeBins: {} };
             }
         }
+        
+        function sanitizeId(id) {
+            return id.replace(/\s+/g, "-").replace(/[^a-zA-Z0-9-_]/g, ""); // Remove special chars
+        }
 
         fetch(`https://raw.githubusercontent.com/brewpoo/dfli-election-district-maps/main/${geojsonFile}`)
             .then(response => response.json())
@@ -83,7 +87,7 @@
                     onEachFeature: function(feature, layer) {
                         let props = feature.properties;
                         let { voterAgeBins, votedAgeBins } = unpackAgeBins(props);
-                        let districtId = props.election_district.replace(/\s+/g, "_");
+                        let districtId = sanitizeId(props.election_district);
 
                         let popupContent = `
                         <div class="popup-content">
@@ -115,8 +119,8 @@
     
                         layer.on("popupopen", function() {
                             setTimeout(() => {
-                                renderAgeChart(`voterAgeChart-${props.election_district.replace(/\s/g, "-")}`, voterAgeBins, "Registered Voters");
-                                renderAgeChart(`votedAgeChart-${props.election_district.replace(/\s/g, "-")}`, votedAgeBins, "Voter Turnout");
+                                renderAgeChart(`voterAgeChart-${districtId}`, voterAgeBins, "Registered Voters");
+                                renderAgeChart(`votedAgeChart-${districtId}`, votedAgeBins, "Voter Turnout");
                             }, 500);
                         });
                     }
@@ -140,7 +144,7 @@
                 window.ageCharts[canvasId].destroy();
             }
 
-            let ageLabels = Object.keys(ageData["Left-Leaning"] || {});  // Get age categories
+            let ageLabels = Object.keys(ageData["Left-Leaning"] || {});  
             let leftData = ageLabels.map(age => ageData["Left-Leaning"]?.[age] || 0);
             let rightData = ageLabels.map(age => ageData["Right-Leaning"]?.[age] || 0);
             let blankData = ageLabels.map(age => ageData["Blank/Other"]?.[age] || 0);
