@@ -5,29 +5,14 @@
   <title>Member Dispersion by ZIP</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44c="
-    crossorigin=""
-  />
-  <style>
-    /* Make the map fill the viewport */
-    html, body, #map { height: 100%; margin: 0; padding: 0; }
-  </style>
-</head>
-<body>
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+  <a href="index.html" class="back-button">⬅ Back to Index</a>
   <div id="map"></div>
-
-  <!-- Leaflet JS -->
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-o9N1j6R9zEF3NyfZt7WT7OVs2Qryt8CqtKZspuWv+0I="
-    crossorigin=""
-  ></script>
-
+  
   <script>
     // 1. Initialize the map (set your desired center & zoom)
     var map = L.map('map').setView([40.75, -73.99], 11);
