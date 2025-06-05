@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Member Dispersion by ZIP</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <!-- Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44c="
+    crossorigin=""
+  />
+  <style>
+    /* Make the map fill the viewport */
+    html, body, #map { height: 100%; margin: 0; padding: 0; }
+  </style>
+</head>
+<body>
+
+  <div id="map"></div>
+
+  <!-- Leaflet JS -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-o9N1j6R9zEF3NyfZt7WT7OVs2Qryt8CqtKZspuWv+0I="
+    crossorigin=""
+  ></script>
+
+  <script>
+    // 1. Initialize the map (set your desired center & zoom)
+    var map = L.map('map').setView([40.75, -73.99], 11);
+
+    // 2. Add a base tile layer (OpenStreetMap in this case)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+      maxZoom: 19,
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+
+    // 3. Load the GeoJSON from the same folder (relative path)
+    fetch('members_by_zip.geojson')
+      .then(function(response) {
+        if (!response.ok) {
+          throw new Error('Network response was not ok: ' + response.statusText);
+        }
+        return response.json();
+      })
+      .then(function(geojsonData) {
+        // 4. Add the GeoJSON layer to the map, styling by member_count
+        L.geoJSON(geojsonData, {
+          pointToLayer: function(feature, latlng) {
+            // Size circles by member_count (adjust multiplier as needed)
+            var count = feature.properties.member_count;
+            return L.circleMarker(latlng, {
+              radius: Math.sqrt(count) * 4, // e.g. sqrt to moderate large counts
+              fillColor: '#ff7800',
+              color: '#000',
+              weight: 1,
+              opacity: 1,
+              fillOpacity: 0.6
+            });
+          },
+          onEachFeature: function(feature, layer) {
+            // Bind a popup with ZIP and count
+            var zip = feature.properties.zip;
+            var count = feature.properties.member_count;
+            layer.bindPopup(
+              '<strong>ZIP:</strong> ' + zip +
+              '<br><strong>Members:</strong> ' + count
+            );
+          }
+        }).addTo(map);
+      })
+      .catch(function(err) {
+        console.error('Failed to load GeoJSON:', err);
+      });
+
+    // Optionally, you can add a legend or scale control here…
+  </script>
+</body>
+</html>
