@@ -5,46 +5,27 @@
   <title>Member Dispersion by ZIP</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- 1) Leaflet CSS -->
-  <link
-    rel="stylesheet"
-    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
-    integrity="sha256-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44c="
-    crossorigin=""
-  />
-
-  <!-- 2) Set full‐page height so #map is not zero‐height -->
-  <style>
-    html, body, #map {
-      height: 100%;
-      margin: 0;
-      padding: 0;
-    }
-    /* Example styling for your “back” link */
-    .back-button {
-      position: absolute;
-      top: 10px;
-      left: 10px;
-      z-index: 1000;
-      background: white;
-      padding: 4px 8px;
-      text-decoration: none;
-      border: 1px solid #999;
-      border-radius: 3px;
-      font-size: 14px;
-      color: #333;
-    }
-  </style>
-
-  <!-- 3) Leaflet JS must be loaded before you call L.map(...) -->
-  <script
-    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-    integrity="sha256-o9N1j6R9zEF3NyfZt7WT7OVs2Qryt8CqtKZspuWv+0I="
-    crossorigin=""
-  ></script>
-
-  <!-- (Optional) Other libraries, e.g., Chart.js -->
+  <!-- Leaflet CSS & JS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+      #map { height: 100vh; width: 100%; }
+      .back-button { 
+          position: absolute; 
+          top: 10px; left: 10px; 
+          background: white; 
+          padding: 5px 10px; 
+          border-radius: 5px; 
+          text-decoration: none; 
+          font-weight: bold; 
+          z-index: 1000; 
+      }
+      .popup-content {
+          max-height: 400px;  /* Reduced height */
+      }
+    </style>
 
 </head>
 <body>
