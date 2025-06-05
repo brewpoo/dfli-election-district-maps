@@ -1,29 +1,67 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
   <meta charset="utf-8" />
   <title>Member Dispersion by ZIP</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- Leaflet CSS & JS -->
-  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <!-- 1) Leaflet CSS -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-XQoYMqMTK8LvdxXYG3nZ448hOEQiglfqkJs1NOQV44c="
+    crossorigin=""
+  />
+
+  <!-- 2) Set full‐page height so #map is not zero‐height -->
+  <style>
+    html, body, #map {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+    /* Example styling for your “back” link */
+    .back-button {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 1000;
+      background: white;
+      padding: 4px 8px;
+      text-decoration: none;
+      border: 1px solid #999;
+      border-radius: 3px;
+      font-size: 14px;
+      color: #333;
+    }
+  </style>
+
+  <!-- 3) Leaflet JS must be loaded before you call L.map(...) -->
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-o9N1j6R9zEF3NyfZt7WT7OVs2Qryt8CqtKZspuWv+0I="
+    crossorigin=""
+  ></script>
+
+  <!-- (Optional) Other libraries, e.g., Chart.js -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
+</head>
+<body>
+  <!-- 4) Now we’re in <body>—map container and any links belong here -->
   <a href="index.html" class="back-button">⬅ Back to Index</a>
   <div id="map"></div>
-  
+
+  <!-- 5) Your custom code can run immediately, because #map already exists -->
   <script>
-    // 1. Initialize the map (set your desired center & zoom)
+    // It’s okay to run this here since <div id="map"> is already in the body.
     var map = L.map('map').setView([40.75, -73.99], 11);
 
-    // 2. Add a base tile layer (OpenStreetMap in this case)
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       maxZoom: 19,
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
 
-    // 3. Load the GeoJSON from the same folder (relative path)
     fetch('members_by_zip.geojson')
       .then(function(response) {
         if (!response.ok) {
@@ -32,13 +70,11 @@
         return response.json();
       })
       .then(function(geojsonData) {
-        // 4. Add the GeoJSON layer to the map, styling by member_count
         L.geoJSON(geojsonData, {
           pointToLayer: function(feature, latlng) {
-            // Size circles by member_count (adjust multiplier as needed)
             var count = feature.properties.member_count;
             return L.circleMarker(latlng, {
-              radius: Math.sqrt(count) * 4, // e.g. sqrt to moderate large counts
+              radius: Math.sqrt(count) * 4,
               fillColor: '#ff7800',
               color: '#000',
               weight: 1,
@@ -47,7 +83,6 @@
             });
           },
           onEachFeature: function(feature, layer) {
-            // Bind a popup with ZIP and count
             var zip = feature.properties.zip;
             var count = feature.properties.member_count;
             layer.bindPopup(
@@ -60,8 +95,6 @@
       .catch(function(err) {
         console.error('Failed to load GeoJSON:', err);
       });
-
-    // Optionally, you can add a legend or scale control here…
   </script>
 </body>
 </html>
